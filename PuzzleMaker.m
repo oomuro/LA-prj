@@ -16,12 +16,12 @@ function PuzzleMaker(src)
     imshow(puzzle)
     
     child = [1:9];
-    %%표본 만들기
+    %%표본 만들기(이미지를 cell로 나누는데 이 셀들의 순서를 랜덤으로 생성)
     for i = 1:100
         child(1:9) = child(randperm(9));
         children(i,:) = child;
     end
-    
+    %%일단 놔두기
     for i = 1:100
        children_local = mat2cell(imdata, block_dims(1)*ones(3,1), block_dims(2)*ones(3,1));
        children_local(1:9) = children_local(children(i,:));
@@ -77,10 +77,14 @@ function PuzzleMaker(src)
     ch_image = cell2mat(ch_result);
     imshow(ch_image)
     
+    %% 함수부분 시작
     
+    %% 자식들 생성
     function firstteach()
     for i = 1:100
-        children_local = mat2cell(imdata, block_dims(1)*ones(3,1), block_dims(2)*ones(3,1));
+        %%mat2cell로 cell형태로 변환시키고 cell2mat으로 숫자형태로 바꾼다. 수식연산을 하기 위해선 숫자형태로
+        %%바꿔야함.
+        children_local = mat2cell(imdata, block_dims(1)*ones(3,1), block_dims(2)*ones(3,1)); 
         children_local(1:9) = children_local(children(num,:));
         
         rand = randperm(9,2);
@@ -94,6 +98,7 @@ function PuzzleMaker(src)
        end
        
        parts = double(parts);
+       %%모서리에서의 수치값의 차이를 구하는 라인
        for j = 1:6
            if rem(j,3) == 1
                 check = parts(j,:,end) - parts(j+3,:,1);
@@ -122,9 +127,12 @@ function PuzzleMaker(src)
                 checker(i,1) = checker(i,1) + sum(abs(check));
            end
        end
+       
        %%[minNum num] = min(checker);
+       %%변형된 cell들을 저장함
        saveArray(i,:,:) = children_local;
     end
+    %%sort해서 적은순으로 1등부터 5등까지 저장한뒤 출력하는 곳
     checker_sort = sort(checker);
     for p = 1:5
        checker_find = find(checker(:,1)==checker_sort(p))';
@@ -133,7 +141,7 @@ function PuzzleMaker(src)
     %%ch = children_local(children(num,:));
     %%ch = reshape(ch,3,3);
     end
-
+    %% 자식들을 받아서 약간 변형시킨 후 값이 적은 5개의 자식들을 출력
     function [ch] = teaching(ch)
     for p = 1:5
         for i = 1:10
@@ -198,7 +206,7 @@ function PuzzleMaker(src)
     end
     
     end
-
+    %% 돌연변이 생성(이거 잘 안됨)
     function [ch checker_mutation] = mutation(ch_in)
         children_mutation(:,:) = ch_in;
         ch = children_mutation;
