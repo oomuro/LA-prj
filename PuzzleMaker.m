@@ -198,7 +198,6 @@ function PuzzleMaker(src)
     
     
     %%ch(:,:) = saveArray(num,:,:);
-    
     [ch_mutation checker_mutation] = mutation(ch(1,:,:));
     display(checker_mutation);
     if minNum > checker_mutation
@@ -212,14 +211,25 @@ function PuzzleMaker(src)
         ch = children_mutation;
         ch = reshape(ch,3,3);
         
-        temp = ch(1,:);
-        ch(1,:) = ch(3,:);
-        ch(3,:) = temp;
+        ran = randi(2);
+        if  ran == 1
+            temp = ch(1,:);
+            ch(1,:) = ch(3,:);
+            ch(3,:) = temp;
         
-        temp = ch(2,:);
-        ch(2,:) = ch(3,:);
-        ch(3,:) = temp;
+            temp = ch(2,:);
+            ch(2,:) = ch(3,:);
+            ch(3,:) = temp;
+        end
+        if ran == 2
+            temp = ch(:,1);
+            ch(:,1) = ch(:,3);
+            ch(:,1) = temp;
         
+            temp = ch(:,2);
+            ch(:,2) = ch(:,3);
+            ch(:,3) = temp;
+        end
        for j = 1:9
            parts_mutation(j,:,:) = cell2mat(ch(j));
        end
