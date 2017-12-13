@@ -65,17 +65,39 @@ function PuzzleMaker(src)
     firstteach();
    [minNum num] = min(checker)
    clear checker;
-    for k = 1:100
-       ch = teaching(ch);   
+   count = 0;
+    for k = 1:50
+        if k > 1
+            count_temp = count_out;
+        end
+       [ch count_out] = teaching(ch);
+       if k > 1
+            if count_temp == count_out
+                if count_temp > 30000
+                    count = count + 1;
+                end
+            end
+            if count > 10
+                for p = 1:5
+                    ch_new = mat2cell(imdata, block_dims(1)*ones(3,1), block_dims(2)*ones(3,1));
+                    ch_new(1:9) = ch_new(randperm(9));
+                    ch(:,:,p) = ch_new; 
+                end
+                count = 0;
+            end
+       end
        display(k)
     end
     [minNum num] = min(checker)
     for p = 1:5
-        ch(p,:,:) = reshape(ch(p,:,:),3,3);
+        ch(:,:,p) = reshape(ch(:,:,p),3,3);
+        ch_result(:,:) = ch(:,:,p);
+        ch_image = cell2mat(ch_result);
+        figure(p)
+        imshow(ch_image)
     end
-    ch_result(:,:) = ch(1,:,:);
-    ch_image = cell2mat(ch_result);
-    imshow(ch_image)
+    
+    
     
     %% 함수부분 시작
     
@@ -130,27 +152,53 @@ function PuzzleMaker(src)
        
        %%[minNum num] = min(checker);
        %%변형된 cell들을 저장함
-       saveArray(i,:,:) = children_local;
+       saveArray(:,:,i) = children_local;
     end
     %%sort해서 적은순으로 1등부터 5등까지 저장한뒤 출력하는 곳
     checker_sort = sort(checker);
     for p = 1:5
        checker_find = find(checker(:,1)==checker_sort(p))';
-       ch(p,:,:) = saveArray(checker_find(1,1),:,:);
+       ch(:,:,p) = saveArray(:,:,checker_find(1,1));
     end
     %%ch = children_local(children(num,:));
     %%ch = reshape(ch,3,3);
     end
     %% 자식들을 받아서 약간 변형시킨 후 값이 적은 5개의 자식들을 출력
-    function [ch] = teaching(ch)
+    function [ch count_in] = teaching(ch)
     for p = 1:5
         for i = 1:10
-        children_local(:,:) = ch(p,:,:);
+        children_local(:,:) = ch(:,:,p);
         if i > 1
-            rand = randperm(9,2);
-            temp = children_local(rand(2));
-            children_local(rand(2)) = children_local(rand(1));
-            children_local(rand(1)) = temp;
+            if rem(i,3) == 1
+                rand = randperm(9,2);
+                temp = children_local(rand(2));
+                children_local(rand(2)) = children_local(rand(1));
+                children_local(rand(1)) = temp;
+            end
+            if rem(i,3) == 2
+                rand = randperm(9,2);
+                temp = children_local(rand(2));
+                children_local(rand(2)) = children_local(rand(1));
+                children_local(rand(1)) = temp;
+                rand = randperm(9,2);
+                temp = children_local(rand(2));
+                children_local(rand(2)) = children_local(rand(1));
+                children_local(rand(1)) = temp;
+            end
+            if rem(i,3) == 0
+                rand = randperm(9,2);
+                temp = children_local(rand(2));
+                children_local(rand(2)) = children_local(rand(1));
+                children_local(rand(1)) = temp;
+                rand = randperm(9,2);
+                temp = children_local(rand(2));
+                children_local(rand(2)) = children_local(rand(1));
+                children_local(rand(1)) = temp;
+                rand = randperm(9,2);
+                temp = children_local(rand(2));
+                children_local(rand(2)) = children_local(rand(1));
+                children_local(rand(1)) = temp;
+            end
         end
         
        for j = 1:9
@@ -186,24 +234,26 @@ function PuzzleMaker(src)
                 checker(i+(p-1)*10,1) = checker(i+(p-1)*10,1) + sum(abs(check));
            end
        end
-      %%[minNum num] = min(checker);
-      saveArray(i+(p-1)*10,:,:) = children_local;
+      [minNum num] = min(checker);
+      saveArray(:,:,i+(p-1)*10) = children_local;
         end
     end
     checker_sort = sort(checker);
     for p = 1:5
        checker_find = find(checker(:,1)==checker_sort(p))';
-       ch(p,:,:) = saveArray(checker_find(1,1),:,:);
+       ch(:,:,p) = saveArray(:,:,checker_find(1,1));
     end
     
     
     %%ch(:,:) = saveArray(num,:,:);
-    [ch_mutation checker_mutation] = mutation(ch(1,:,:));
-    display(checker_mutation);
-    if minNum > checker_mutation
-       ch = ch_mutation;
+    for p = 1:5
+        [ch_mutation checker_mutation] = mutation(ch(:,:,p));
+        if checker_sort(p) > checker_mutation
+            ch(:,:,p) = ch_mutation;
+        end
     end
-    
+    display(checker_sort(1))
+    count_in = checker_sort(1);
     end
     %% 돌연변이 생성(이거 잘 안됨)
     function [ch checker_mutation] = mutation(ch_in)
@@ -211,7 +261,7 @@ function PuzzleMaker(src)
         ch = children_mutation;
         ch = reshape(ch,3,3);
         
-        ran = randi(2);
+        ran = randi(4);
         if  ran == 1
             temp = ch(1,:);
             ch(1,:) = ch(3,:);
@@ -224,7 +274,25 @@ function PuzzleMaker(src)
         if ran == 2
             temp = ch(:,1);
             ch(:,1) = ch(:,3);
-            ch(:,1) = temp;
+            ch(:,3) = temp;
+        
+            temp = ch(:,2);
+            ch(:,2) = ch(:,3);
+            ch(:,3) = temp;
+        end
+        if  ran == 3
+            temp = ch(1,:);
+            ch(1,:) = ch(2,:);
+            ch(2,:) = temp;
+        
+            temp = ch(2,:);
+            ch(2,:) = ch(3,:);
+            ch(3,:) = temp;
+        end
+        if ran == 4
+            temp = ch(:,1);
+            ch(:,1) = ch(:,2);
+            ch(:,2) = temp;
         
             temp = ch(:,2);
             ch(:,2) = ch(:,3);
