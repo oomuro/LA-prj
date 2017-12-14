@@ -7,6 +7,7 @@ function PuzzleMaker(src)
     %% Arrange into 3x3 cell
     block_dims = new_dims./[3 3];
     blocks = mat2cell(imdata, block_dims(1)*ones(3,1), block_dims(2)*ones(3,1));
+    lowbound = firstcal();
     %% Rearrange randomly
     blocks(1:9) = blocks(randperm(9));
     %% Return to image
@@ -66,14 +67,24 @@ function PuzzleMaker(src)
    [minNum num] = min(checker)
    clear checker;
    count = 0;
-    for k = 1:50
+    for k = 1:100
         if k > 1
             count_temp = count_out;
         end
        [ch count_out] = teaching(ch);
+       if count_out < lowbound
+          for p = 1:5
+                    ch_new = mat2cell(imdata, block_dims(1)*ones(3,1), block_dims(2)*ones(3,1));
+                    ch_new(1:9) = ch_new(randperm(9));
+                    ch(:,:,p) = ch_new; 
+          end 
+       end
+       if count_out == lowbound
+           break;
+       end
        if k > 1
             if count_temp == count_out
-                if count_temp > 30000
+                if count_temp > lowbound + 10000
                     count = count + 1;
                 end
             end
@@ -88,6 +99,56 @@ function PuzzleMaker(src)
        end
        display(k)
     end
+        ch_result(:,:) = ch(:,:,1);
+        ch_image = cell2mat(ch_result);
+        figure(6)
+        imshow(ch_image)
+        for p = 1:5
+            ch_last(:,:) = ch(:,:,1);
+            
+            if p == 1
+                ch_temp = ch_last(1);
+                ch_last(1) = ch_last(2);
+                ch_last(2) = ch_temp;
+            end
+            if p == 2
+                ch_temp = ch_last(1);
+                ch_last(1) = ch_last(3);
+                ch_last(3) = ch_temp;
+            end
+            if p == 3
+                ch_temp = ch_last(3);
+                ch_last(3) = ch_last(2);
+                ch_last(2) = ch_temp;
+            end
+            if p == 4
+                ch_temp = ch_last(1);
+                ch_last(1) = ch_last(2);
+                ch_last(2) = ch_temp;
+                
+                ch_temp = ch_last(3);
+                ch_last(3) = ch_last(2);
+                ch_last(2) = ch_temp;
+            end
+            if p == 5
+                ch_temp = ch_last(1);
+                ch_last(1) = ch_last(2);
+                ch_last(2) = ch_temp;
+                
+                ch_temp = ch_last(3);
+                ch_last(3) = ch_last(2);
+                ch_last(2) = ch_temp;
+                
+                ch_temp = ch_last(1);
+                ch_last(1) = ch_last(2);
+                ch_last(2) = ch_temp;
+                
+                ch_temp = ch_last(3);
+                ch_last(3) = ch_last(2);
+                ch_last(2) = ch_temp;
+            end
+            ch(:,:,p) = ch_last;
+        end
     [minNum num] = min(checker)
     for p = 1:5
         ch(:,:,p) = reshape(ch(:,:,p),3,3);
@@ -101,6 +162,43 @@ function PuzzleMaker(src)
     
     %% 함수부분 시작
     
+    function [lowbound] =  firstcal()
+        for j = 1:9
+           parts(j,:,:) = cell2mat(blocks(j));
+       end
+       
+       parts = double(parts);
+       %%모서리에서의 수치값의 차이를 구하는 라인
+       for j = 1:6
+           if rem(j,3) == 1
+                check = parts(j,:,end) - parts(j+3,:,1);
+                checker_cal = sum(abs(check));
+                check = parts(j,end,:) - parts(j+1,1,:);
+                checker_cal = checker_cal + sum(abs(check));
+           end
+           if rem(j,3) == 2
+                check = parts(j,:,end) - parts(j+3,:,1);
+                checker_cal = checker_cal + sum(abs(check));
+                check = parts(j,end,:) - parts(j+1,1,:);
+                checker_cal = checker_cal + sum(abs(check));
+           end
+           if rem(j,3) == 0
+                check = parts(j,:,end) - parts(j+3,:,1);
+                checker_cal = checker_cal + sum(abs(check));
+           end
+       end
+       for j = 7:9
+           if rem(j,3) == 1
+                check = parts(j,end,:) - parts(j+1,1,:);
+                checker_cal = checker_cal + sum(abs(check));
+           end
+           if rem(j,3) == 2
+                check = parts(j,end,:) - parts(j+1,1,:);
+                checker_cal = checker_cal + sum(abs(check));
+           end
+       end
+       lowbound = checker_cal;
+    end
     %% 자식들 생성
     function firstteach()
     for i = 1:100
@@ -239,17 +337,18 @@ function PuzzleMaker(src)
         end
     end
     checker_sort = sort(checker);
-    for p = 1:5
-       checker_find = find(checker(:,1)==checker_sort(p))';
-       ch(:,:,p) = saveArray(:,:,checker_find(1,1));
-    end
     
-    
-    %%ch(:,:) = saveArray(num,:,:);
-    for p = 1:5
-        [ch_mutation checker_mutation] = mutation(ch(:,:,p));
-        if checker_sort(p) > checker_mutation
+        for p = 1:5
+            checker_find = find(checker(:,1)==checker_sort(p))';
+            ch(:,:,p) = saveArray(:,:,checker_find(1,1));
+        end
+    if checker_sort(1) ~= lowbound
+        %%ch(:,:) = saveArray(num,:,:);
+        for p = 1:5
+            [ch_mutation checker_mutation] = mutation(ch(:,:,p));
+            if checker_sort(p) > checker_mutation
             ch(:,:,p) = ch_mutation;
+            end
         end
     end
     display(checker_sort(1))
