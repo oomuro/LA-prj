@@ -1,4 +1,4 @@
-function PuzzleMaker(src)
+function [check_run] = PuzzleMaker(src)
    %% load and crop image
     imdata = imread(src);
     imdata = rgb2gray(imdata);
@@ -22,7 +22,7 @@ function PuzzleMaker(src)
         child(1:9) = child(randperm(9));
         children(i,:) = child;
     end
-    %%일단 놔두기
+
     for i = 1:100
        children_local = mat2cell(imdata, block_dims(1)*ones(3,1), block_dims(2)*ones(3,1));
        children_local(1:9) = children_local(children(i,:));
@@ -63,10 +63,11 @@ function PuzzleMaker(src)
          [minNum num] = min(checker);
     end
     
-    firstteach();
+   firstteach();
    [minNum num] = min(checker)
    clear checker;
    count = 0;
+   check_run = 1;
     for k = 1:100
         if k > 1
             count_temp = count_out;
@@ -89,6 +90,7 @@ function PuzzleMaker(src)
                 end
             end
             if count > 10
+                check_run = 0;
                 for p = 1:5
                     ch_new = mat2cell(imdata, block_dims(1)*ones(3,1), block_dims(2)*ones(3,1));
                     ch_new(1:9) = ch_new(randperm(9));
@@ -157,7 +159,7 @@ function PuzzleMaker(src)
         figure(p)
         imshow(ch_image)
     end
-    
+
     
     
     %% 함수부분 시작
@@ -342,6 +344,7 @@ function PuzzleMaker(src)
             checker_find = find(checker(:,1)==checker_sort(p))';
             ch(:,:,p) = saveArray(:,:,checker_find(1,1));
         end
+        
     if checker_sort(1) ~= lowbound
         %%ch(:,:) = saveArray(num,:,:);
         for p = 1:5
